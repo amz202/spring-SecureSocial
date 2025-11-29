@@ -43,6 +43,10 @@ class AuthService(
         )
     }
 
+    fun checkAvailableUsername(username: String): Boolean {
+        return userRepository.findByUsername(username) == null
+    }
+
     fun login(username: String, password: String): TokenPair {
         val user = userRepository.findByUsername(username)
             ?: throw BadCredentialsException("Invalid credentials.")
