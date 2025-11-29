@@ -1,5 +1,6 @@
 package com.example.securesocial.controllers
 
+import com.example.securesocial.data.model.request.LoginRequest
 import com.example.securesocial.data.model.request.OtpRequest
 import com.example.securesocial.data.model.request.RegisterRequest
 import com.example.securesocial.data.model.request.RefreshRequest
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -27,9 +29,9 @@ class AuthController(
 
     @PostMapping("/login")
     fun login(
-        @RequestBody body: RegisterRequest
+        @RequestBody body: LoginRequest
     ): AuthService.TokenPair {
-        return authService.login(body.username, body.password)
+        return authService.login(body.email, body.password)
     }
 
     @PostMapping("/refresh")
@@ -45,5 +47,10 @@ class AuthController(
     @PostMapping("/verify-otp")
     fun verify(@RequestBody body: OtpRequest): ResponseEntity<String> {
         return ResponseEntity.ok(authService.verify(body))
+    }
+
+    @PostMapping("/resend-otp")
+    fun resendOtp(@RequestParam email: String): ResponseEntity<String> {
+        return ResponseEntity.ok(authService.resendOtp(email))
     }
 }

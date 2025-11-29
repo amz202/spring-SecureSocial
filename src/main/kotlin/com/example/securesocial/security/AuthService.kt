@@ -87,8 +87,8 @@ class AuthService(
         return userRepository.findByUsername(username) == null
     }
 
-    fun login(username: String, password: String): TokenPair {
-        val user = userRepository.findByUsername(username)
+    fun login(email: String, password: String): TokenPair {
+        val user = userRepository.findByEmail(email)
             ?: throw BadCredentialsException("Invalid credentials.")
 
         if(!hashEncoder.matches(password, user.hashedPassword)) {
@@ -135,6 +135,30 @@ class AuthService(
             accessToken = newAccessToken,
             refreshToken = newRefreshToken
         )
+    }
+
+    fun resendOtp(email: String): String {
+        val user = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+
+        if (user.isVerified) {
+            return "Account is already verified. Please login."
+        }
+
+        val plainOtp = (100000..999999).random().toString()
+        val hashedOtp = hashEncoder.encode(plainOtp) ?: throw RuntimeException("Encoding error")
+
+        verificationTokenRepository.deleteByEmail(email)
+
+        val token = VerificationToken(
+            email = email,
+            hashedOtp = hashedOtp
+        )
+        verificationTokenRepository.save(token)
+
+        emailService.sendVerificationEmail(email, plainOtp)
+
+        return "New code sent! Check your email."
     }
 
     @OptIn(ExperimentalTime::class)

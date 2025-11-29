@@ -10,6 +10,8 @@ import com.example.securesocial.service.PostInteractionService
 import org.bson.types.ObjectId
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import kotlin.text.toHexString
+import kotlin.toString
 
 @RestController
 @RequestMapping("/api/posts")
@@ -24,7 +26,7 @@ class PostController(
     fun createPost(
         @RequestHeader("Authorization") token: String,
         @RequestBody request: PostRequest
-    ): ResponseEntity<Post> {  //errors return string
+    ): ResponseEntity<PostResponse> {
         val userId = jwtService.getUserIdFromToken(token)
         val selectedTag = PostTag.valueOf(request.tag.uppercase())
         val post = Post(
@@ -33,7 +35,20 @@ class PostController(
             content = request.content,
             tag = selectedTag
         )
-        return ResponseEntity.ok(postRepository.save(post))
+        val savedPost = postRepository.save(post)
+
+        val response = PostResponse(
+            id = savedPost.id.toHexString(),
+            authorId = savedPost.authorId.toHexString(),
+            title = savedPost.title,
+            content = savedPost.content,
+            tag = savedPost.tag.toString(),
+            createdAt = savedPost.createdAt,
+            likeCount = 0,
+            viewCount = 0
+        )
+
+        return ResponseEntity.ok(response)
     }
 
     // Get All Posts (with counts)
