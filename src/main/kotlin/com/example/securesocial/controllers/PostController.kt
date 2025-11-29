@@ -1,6 +1,7 @@
 package com.example.securesocial.controllers
 
 import com.example.securesocial.data.model.Post
+import com.example.securesocial.data.model.PostTag
 import com.example.securesocial.data.model.request.PostRequest
 import com.example.securesocial.data.model.response.PostResponse
 import com.example.securesocial.data.repositories.PostRepository
@@ -23,13 +24,18 @@ class PostController(
     fun createPost(
         @RequestHeader("Authorization") token: String,
         @RequestBody request: PostRequest
-    ): ResponseEntity<Post> {
+    ): ResponseEntity<Any> {  //errors return string
         val userId = jwtService.getUserIdFromToken(token)
-
+        val selectedTag = try {
+            PostTag.valueOf(request.tag.uppercase())
+        } catch (e: IllegalArgumentException) {
+            return ResponseEntity.badRequest().body("Invalid tag. Allowed: ${PostTag.values().joinToString()}")
+        }
         val post = Post(
             authorId = ObjectId(userId),
             title = request.title,
-            content = request.content
+            content = request.content,
+            tag = selectedTag
         )
         return ResponseEntity.ok(postRepository.save(post))
     }
@@ -45,6 +51,7 @@ class PostController(
                 content = post.content,
                 createdAt = post.createdAt,
                 authorId = post.authorId.toHexString(),
+                tag = post.tag.toString(),
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
                 viewCount = postInteractionService.getViewCount(post.id.toHexString())
             )
@@ -71,10 +78,39 @@ class PostController(
                 content = post.content,
                 createdAt = post.createdAt,
                 authorId = post.authorId.toHexString(),
+                tag = post.tag.toString(),
                 likeCount = postInteractionService.getLikeCount(postId),
                 viewCount = postInteractionService.getViewCount(postId)
             )
         )
+    }
+
+    @GetMapping("/tag/{tagName}")
+    fun getPostsByTag(
+        @PathVariable tagName: String
+    ): ResponseEntity<Any> {
+        val tag = try {
+            PostTag.valueOf(tagName.uppercase())
+        } catch (e: IllegalArgumentException) {
+            return ResponseEntity.badRequest().body("Invalid tag.")
+        }
+
+        val posts = postRepository.findByTag(tag)
+
+        val response = posts?.map { post ->
+            PostResponse(
+                id = post.id.toHexString(),
+                title = post.title,
+                content = post.content,
+                tag = post.tag.name,
+                createdAt = post.createdAt,
+                authorId = post.authorId.toHexString(),
+                likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
+                viewCount = postInteractionService.getViewCount(post.id.toHexString())
+            )
+        }
+
+        return ResponseEntity.ok(response)
     }
 
     @PostMapping("/{postId}/like")

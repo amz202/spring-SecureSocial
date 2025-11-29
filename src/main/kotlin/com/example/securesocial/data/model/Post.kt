@@ -10,6 +10,7 @@ data class Post(
     val authorId: ObjectId,
     val title: String,
     val content: String,
+    val tag: PostTag,
     val createdAt: Long = System.currentTimeMillis()
 )
 
