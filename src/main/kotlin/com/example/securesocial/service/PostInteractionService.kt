@@ -15,44 +15,44 @@ class PostInteractionService(
     private val postViewRepository: PostViewRepository,
     private val cryptoService: CryptoService
 ){
-    fun likePost(userId: ObjectId, postId: ObjectId): PostLike{
+    fun likePost(userId: String, postId: String): PostLike {
 
-        if (postLikeRepository.existsByPostIdAndUserId(postId, userId)) {
+        val userObjectId = ObjectId(userId)
+        val postObjectId = ObjectId(postId)
+
+        if (postLikeRepository.existsByPostIdAndUserId(postObjectId, userObjectId)) {
             throw IllegalArgumentException("User has already liked this post")
         }
 
-        val digitalSignature = cryptoService.signLike(
-            userId.toString(),
-            postId.toString(),
-            System.currentTimeMillis()
-        )
-
+        val digitalSignature = cryptoService.signLike(userId, postId, System.currentTimeMillis())
         val like = PostLike(
-            postId = postId,
-            userId = userId,
+            postId = postObjectId,
+            userId = userObjectId,
             signature = digitalSignature
         )
 
         return postLikeRepository.save(like)
     }
 
-    fun viewPost(userId: ObjectId, postId: ObjectId){
-        val hashedToken = cryptoService.generateAnonymousViewToken(userId.toString(), postId.toString())
+    fun viewPost(userId: String, postId: String) {
+        val postObjectId = ObjectId(postId)
+        val hashedToken = cryptoService.generateAnonymousViewToken(userId, postId)
 
-        if(!postViewRepository.existsByPostIdAndHashedViewToken(postId, hashedToken)){
+        if (!postViewRepository.existsByPostIdAndHashedViewToken(postObjectId, hashedToken)) {
             val view = PostView(
-                postId = postId, hashedViewToken = hashedToken
+                postId = postObjectId,
+                hashedViewToken = hashedToken
             )
             postViewRepository.save(view)
         }
     }
 
-    fun getLikeCount(postId: ObjectId): Long {
-        return postLikeRepository.countByPostId(postId)
+    fun getLikeCount(postId: String): Long {
+        return postLikeRepository.countByPostId(ObjectId(postId))
     }
 
-    fun getViewCount(postId: ObjectId): Long {
-        return postViewRepository.countByPostId(postId)
+    fun getViewCount(postId: String): Long {
+        return postViewRepository.countByPostId(ObjectId(postId))
     }
 
     fun verifyLikeIntegrity(likeId: String): Boolean {
