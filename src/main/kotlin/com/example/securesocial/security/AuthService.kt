@@ -10,6 +10,7 @@ import com.example.securesocial.data.repositories.UserRepository
 import com.example.securesocial.data.repositories.VerificationTokenRepository
 import com.example.securesocial.service.ActivityLogService
 import com.example.securesocial.service.EmailService
+import com.example.securesocialapp.data.model.response.AuthResponse
 import org.bson.types.ObjectId
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -90,7 +91,7 @@ class AuthService(
         return userRepository.findByUsername(username) == null
     }
 
-    fun login(email: String, password: String): TokenPair {
+    fun login(email: String, password: String): AuthResponse {
         val user = userRepository.findByEmail(email)
             ?: throw BadCredentialsException("Invalid credentials.")
 
@@ -113,7 +114,13 @@ class AuthService(
             details = null
         )
 
-        return tokenPair
+        return AuthResponse(
+            accessToken = newAccessToken,
+            refreshToken = newRefreshToken,
+            userId = user.id.toHexString(),
+            username = user.username,
+            email = user.email
+        )
     }
 
     @Transactional //if any of db query fail, we want to rollback the whole transaction
