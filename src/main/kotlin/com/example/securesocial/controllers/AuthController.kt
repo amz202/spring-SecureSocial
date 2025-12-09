@@ -5,6 +5,7 @@ import com.example.securesocial.data.model.request.OtpRequest
 import com.example.securesocial.data.model.request.RegisterRequest
 import com.example.securesocial.data.model.request.RefreshRequest
 import com.example.securesocial.security.AuthService
+import com.example.securesocialapp.data.model.response.AuthResponse
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -30,7 +31,7 @@ class AuthController(
     @PostMapping("/login")
     fun login(
         @RequestBody body: LoginRequest
-    ): AuthService.TokenPair {
+    ): AuthResponse {
         return authService.login(body.email, body.password)
     }
 
