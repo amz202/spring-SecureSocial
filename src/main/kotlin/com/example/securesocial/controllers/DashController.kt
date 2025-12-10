@@ -29,7 +29,7 @@ class DashController(
         val userId = jwtService.getUserIdFromToken(token)
         val logs = activityLogRepository.findByUserId(userId)
 
-        val response = logs?.map { log ->
+        val response = logs?.sortedByDescending { it.createdAt }?.map { log ->
             ActivityLogResponse(
                 id = log.id.toHexString(),
                 userId = log.userId,

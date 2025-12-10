@@ -6,6 +6,7 @@ import com.example.securesocial.data.model.PostTag
 import com.example.securesocial.data.model.request.PostRequest
 import com.example.securesocial.data.model.response.PostResponse
 import com.example.securesocial.data.repositories.PostRepository
+import com.example.securesocial.data.repositories.UserRepository
 import com.example.securesocial.security.JwtService
 import com.example.securesocial.service.ActivityLogService
 import com.example.securesocial.service.PostInteractionService
@@ -19,6 +20,7 @@ import kotlin.toString
 @RequestMapping("/api/posts")
 class PostController(
     private val postRepository: PostRepository,
+    private val userRepository: UserRepository,
     private val postInteractionService: PostInteractionService,
     private val jwtService: JwtService,
     private val activityLogService: ActivityLogService
@@ -41,9 +43,11 @@ class PostController(
         val savedPost = postRepository.save(post)
         activityLogService.log(userId, LogType.POST, savedPost.id.toHexString())
 
+        val authorName = userRepository.findById(ObjectId(userId)).orElse(null)?.username ?: "Unknown"
+
         val response = PostResponse(
             id = savedPost.id.toHexString(),
-            authorId = savedPost.authorId.toHexString(),
+            authorName = authorName,
             title = savedPost.title,
             content = savedPost.content,
             tag = savedPost.tag.toString(),
@@ -65,7 +69,7 @@ class PostController(
                 title = post.title,
                 content = post.content,
                 createdAt = post.createdAt,
-                authorId = post.authorId.toHexString(),
+                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 tag = post.tag.toString(),
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
                 viewCount = postInteractionService.getViewCount(post.id.toHexString())
@@ -85,6 +89,7 @@ class PostController(
         postInteractionService.viewPost(userId, postId)
 
         val post = postRepository.findById(ObjectId(postId)).orElseThrow()
+        val authorName = userRepository.findById(ObjectId(post.authorId.toHexString())).orElse(null)?.username ?: "Unknown"
 
         return ResponseEntity.ok(
             PostResponse(
@@ -92,7 +97,7 @@ class PostController(
                 title = post.title,
                 content = post.content,
                 createdAt = post.createdAt,
-                authorId = post.authorId.toHexString(),
+                authorName = authorName,
                 tag = post.tag.toString(),
                 likeCount = postInteractionService.getLikeCount(postId),
                 viewCount = postInteractionService.getViewCount(postId)
@@ -117,7 +122,7 @@ class PostController(
                 content = post.content,
                 tag = post.tag.name,
                 createdAt = post.createdAt,
-                authorId = post.authorId.toHexString(),
+                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
                 viewCount = postInteractionService.getViewCount(post.id.toHexString())
             )
@@ -150,7 +155,7 @@ class PostController(
                 content = post.content,
                 tag = post.tag.name,
                 createdAt = post.createdAt,
-                authorId = post.authorId.toHexString(),
+                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
                 viewCount = postInteractionService.getViewCount(post.id.toHexString())
             )
