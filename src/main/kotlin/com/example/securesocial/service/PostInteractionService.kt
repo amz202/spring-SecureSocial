@@ -4,8 +4,10 @@ import com.example.securesocial.data.model.LogType
 import com.example.securesocial.data.model.Post
 import com.example.securesocial.data.model.PostLike
 import com.example.securesocial.data.model.PostView
+import com.example.securesocial.data.model.response.PostLikesResponse
 import com.example.securesocial.data.repositories.PostLikeRepository
 import com.example.securesocial.data.repositories.PostViewRepository
+import com.example.securesocial.data.repositories.UserRepository
 import com.example.securesocial.security.CryptoService
 import org.bson.types.ObjectId
 import org.springframework.stereotype.Service
@@ -15,7 +17,8 @@ class PostInteractionService(
     private val postLikeRepository: PostLikeRepository,
     private val postViewRepository: PostViewRepository,
     private val cryptoService: CryptoService,
-    private val activityLogService: ActivityLogService
+    private val activityLogService: ActivityLogService,
+    private val userRepository: UserRepository
 ){
     fun likePost(userId: String, postId: String): PostLike {
 
@@ -57,6 +60,16 @@ class PostInteractionService(
 
     fun getViewCount(postId: String): Long {
         return postViewRepository.countByPostId(ObjectId(postId))
+    }
+
+    fun getPostLikes(postId: String): List<PostLikesResponse> {
+        return postLikeRepository.findByPostId(ObjectId(postId)).map { like ->
+            PostLikesResponse(
+                username = userRepository.findById(like.userId).orElse(null)?.username ?: "Unknown",
+                likedAt = like.likedAt,
+                postId = like.postId.toHexString()
+            )
+        }
     }
 
     fun verifyLikeIntegrity(likeId: String): Boolean {

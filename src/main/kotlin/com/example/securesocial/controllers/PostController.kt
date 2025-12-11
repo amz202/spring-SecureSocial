@@ -2,8 +2,10 @@ package com.example.securesocial.controllers
 
 import com.example.securesocial.data.model.LogType
 import com.example.securesocial.data.model.Post
+import com.example.securesocial.data.model.PostLike
 import com.example.securesocial.data.model.PostTag
 import com.example.securesocial.data.model.request.PostRequest
+import com.example.securesocial.data.model.response.PostLikesResponse
 import com.example.securesocial.data.model.response.PostResponse
 import com.example.securesocial.data.repositories.PostRepository
 import com.example.securesocial.data.repositories.UserRepository
@@ -162,5 +164,12 @@ class PostController(
         }
 
         return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/{postId}/likes")
+    fun getPostLikes(
+        @PathVariable postId: String
+    ): ResponseEntity<List<PostLikesResponse>> {
+        return ResponseEntity.ok(postInteractionService.getPostLikes(postId))
     }
 }
