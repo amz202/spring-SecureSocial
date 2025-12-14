@@ -8,5 +8,5 @@ data class PostLike(
     val postId: ObjectId,
     val userId: ObjectId,
     val signature: String,
-    val likedAt: Long = System.currentTimeMillis()
+    val likedAt: Long
 )

@@ -33,7 +33,8 @@ class PostInteractionService(
         val like = PostLike(
             postId = postObjectId,
             userId = userObjectId,
-            signature = digitalSignature
+            signature = digitalSignature,
+            likedAt = System.currentTimeMillis()
         )
         val savedLike = postLikeRepository.save(like)
 
