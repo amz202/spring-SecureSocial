@@ -15,6 +15,7 @@ import org.bson.types.ObjectId
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.authentication.DisabledException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
@@ -97,6 +98,10 @@ class AuthService(
 
         if(!hashEncoder.matches(password, user.hashedPassword)) {
             throw BadCredentialsException("Invalid credentials.")
+        }
+
+        if (!user.isVerified) {
+            throw DisabledException("Account not verified. Please verify OTP.")
         }
 
         val newAccessToken = jwtService.generateAccessToken(user.id.toHexString())
