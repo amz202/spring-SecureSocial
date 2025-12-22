@@ -12,6 +12,7 @@ import com.example.securesocial.data.repositories.UserRepository
 import com.example.securesocial.security.JwtService
 import com.example.securesocial.service.ActivityLogService
 import com.example.securesocial.service.PostInteractionService
+import com.example.securesocial.service.PostService
 import org.bson.types.ObjectId
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -25,7 +26,7 @@ class PostController(
     private val userRepository: UserRepository,
     private val postInteractionService: PostInteractionService,
     private val jwtService: JwtService,
-    private val activityLogService: ActivityLogService
+    private val postService: PostService
 ) {
 
     // Create a Post
@@ -35,49 +36,13 @@ class PostController(
         @RequestBody request: PostRequest
     ): ResponseEntity<PostResponse> {
         val userId = jwtService.getUserIdFromToken(token)
-        val selectedTag = PostTag.valueOf(request.tag.uppercase())
-        val post = Post(
-            authorId = ObjectId(userId),
-            title = request.title,
-            content = request.content,
-            tag = selectedTag
-        )
-        val savedPost = postRepository.save(post)
-        activityLogService.log(userId, LogType.POST, savedPost.id.toHexString())
-
-        val authorName = userRepository.findById(ObjectId(userId)).orElse(null)?.username ?: "Unknown"
-
-        val response = PostResponse(
-            id = savedPost.id.toHexString(),
-            authorName = authorName,
-            title = savedPost.title,
-            content = savedPost.content,
-            tag = savedPost.tag.toString(),
-            createdAt = savedPost.createdAt,
-            likeCount = 0,
-            viewCount = 0
-        )
-
-        return ResponseEntity.ok(response)
+        return ResponseEntity.ok(postService.createPost(request, userId))
     }
 
     // Get All Posts (with counts)
     @GetMapping
-    fun getAllPosts(@RequestHeader("Authorization") token: String): ResponseEntity<List<PostResponse>> {
-        val posts = postRepository.findAll()
-        val response = posts.map { post ->
-            PostResponse(
-                id = post.id.toHexString(),
-                title = post.title,
-                content = post.content,
-                createdAt = post.createdAt,
-                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
-                tag = post.tag.toString(),
-                likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
-                viewCount = postInteractionService.getViewCount(post.id.toHexString())
-            )
-        }
-        return ResponseEntity.ok(response)
+    fun getAllPosts(): ResponseEntity<List<PostResponse>> {
+        return ResponseEntity.ok(postService.getAllPosts())
     }
 
     @GetMapping("/{postId}")
@@ -109,12 +74,10 @@ class PostController(
 
     @GetMapping("/tag/{tagName}")
     fun getPostsByTag(
-        @RequestHeader("Authorization") token: String,
         @PathVariable tagName: String
     ): ResponseEntity<List<PostResponse>> {
 
         val tag = PostTag.valueOf(tagName.uppercase())
-        val userId = jwtService.getUserIdFromToken(token)
         val posts = postRepository.findByTag(tag)
 
         val response = posts?.map { post ->
