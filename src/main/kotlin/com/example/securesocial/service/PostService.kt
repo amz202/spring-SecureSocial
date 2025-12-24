@@ -62,4 +62,61 @@ class PostService(
         }
         return response
     }
+
+    fun getPost(postId:String, userId: String): PostResponse{
+        //Anonymously count the view
+        postInteractionService.viewPost(userId, postId)
+
+        val post = postRepository.findById(ObjectId(postId)).orElseThrow()
+        val authorName = userRepository.findById(ObjectId(post.authorId.toHexString())).orElse(null)?.username ?: "Unknown"
+
+        val response = PostResponse(
+            id = post.id.toHexString(),
+            title = post.title,
+            content = post.content,
+            createdAt = post.createdAt,
+            authorName = authorName,
+            tag = post.tag.toString(),
+            likeCount = postInteractionService.getLikeCount(postId),
+            viewCount = postInteractionService.getViewCount(postId)
+        )
+        return response
+    }
+
+    fun getPostsByTag(tagName: String): List<PostResponse>?{
+        val tag = PostTag.valueOf(tagName.uppercase())
+        val posts = postRepository.findByTag(tag)
+
+        val response = posts?.map { post ->
+            PostResponse(
+                id = post.id.toHexString(),
+                title = post.title,
+                content = post.content,
+                tag = post.tag.name,
+                createdAt = post.createdAt,
+                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
+                likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
+                viewCount = postInteractionService.getViewCount(post.id.toHexString())
+            )
+        }
+        return response
+    }
+
+    fun getMyPosts(userId: String):List<PostResponse>?{
+        val posts = postRepository.findByAuthorId(ObjectId(userId))
+
+        val response = posts?.map { post ->
+            PostResponse(
+                id = post.id.toHexString(),
+                title = post.title,
+                content = post.content,
+                tag = post.tag.name,
+                createdAt = post.createdAt,
+                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
+                likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
+                viewCount = postInteractionService.getViewCount(post.id.toHexString())
+            )
+        }
+        return response
+    }
 }
