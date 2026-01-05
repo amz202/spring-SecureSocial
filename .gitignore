@@ -1,5 +1,8 @@
 src/main/resources/application.properties
 
+.env
+.dockerignore
+
 HELP.md
 .gradle
 build/
