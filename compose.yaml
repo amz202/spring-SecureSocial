@@ -1,0 +1,8 @@
+services:
+  backend:              # name of the container (--name)
+    build: .            # Builds the image automatically (docker build)
+    ports:
+      - "8080:8080"     # Map the ports (-p)
+    env_file:
+      - .env
+    restart: always     # restart if it crashes
