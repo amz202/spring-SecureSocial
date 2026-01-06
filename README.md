@@ -45,10 +45,9 @@ A backend service built with Spring Boot and Kotlin, designed to provide a secur
   VIEW_PEPPER=your_secure_random_string
   GMAIL_PW=your_gmail_app_password
   
-- **Build:** Build the image and start the container.
+- **Run:** Start the application using docker compose.
   ```
-  docker build -t securesocial-backend .
-  docker run -d -p 8080:8080 --env-file .env securesocial-backend
+  docker compose up -d
 ---
 
 ## License
