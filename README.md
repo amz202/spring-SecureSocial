@@ -6,18 +6,18 @@ A backend service built with Spring Boot and Kotlin, designed to provide a secur
 
 ## Features
 
-- **Multi-Stage Authentication:** Registration places accounts in a locked state until email-based OTP verification is completed.  
-- **Stateless Security:** Short-lived Access Tokens with database-backed Refresh Tokens.  
-- **Activity Auditing:** Logs key security-critical events (logins, failed attempts, post creation).  
+- **Multi-Stage Authentication:** Registration places accounts in a locked state until email-based OTP verification is completed.
+- **Stateless Security:** Short-lived Access Tokens with database-backed Refresh Tokens.
+- **Activity Auditing:** Logs key security-critical events (logins, failed attempts, post creation).
 - **Social Graph:** Efficient handling of posts, tags, and like aggregations.
 
 ---
 
 ## Security Mechanisms
 
-- **HMAC Signatures:** Critical write operations (such as likes) are verified using HMAC to prevent tampering.  
-- **Data Hashing:** User identifiers in view tracking are hashed for privacy/incognito modes.  
-- **Restricted Access:** Protected endpoints require authorization.  
+- **HMAC Signatures:** Critical write operations (such as likes) are verified using HMAC to prevent tampering.
+- **Data Hashing:** User identifiers in view tracking are hashed for privacy/incognito modes.
+- **Restricted Access:** Protected endpoints require authorization.
 - **Token Handling:** Implements a dual-token system (Access & Refresh) to ensure secure authentication.
 - **Input Validation:** Strict validation on incoming DTOs.
 
@@ -25,13 +25,30 @@ A backend service built with Spring Boot and Kotlin, designed to provide a secur
 
 ## Tech Stack
 
-- **Language:** Kotlin  
+- **Language:** Kotlin
 - **Framework:** Spring Boot
 - **Security:** Spring Security
-- **Database:** MongoDB  
-- **Authentication:** JWT  
+- **Database:** MongoDB
+- **Authentication:** JWT
 - **Communication:** JavaMailSender
+- **Containerization:** Docker
 
+---
+
+## Docker Support
+
+- **Configuration:** Create a `.env` file in the project root with your secrets.
+  ```env
+  MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/db_name
+  JWT_SECRET=your_secure_random_string
+  HMAC_SECRET=your_secure_random_string
+  VIEW_PEPPER=your_secure_random_string
+  GMAIL_PW=your_gmail_app_password
+  
+- **Build:** Build the image and start the container.
+  ```
+  docker build -t securesocial-backend .
+  docker run -d -p 8080:8080 --env-file .env securesocial-backend
 ---
 
 ## License
