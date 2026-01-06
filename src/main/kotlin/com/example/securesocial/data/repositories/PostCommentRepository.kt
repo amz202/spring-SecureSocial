@@ -9,5 +9,5 @@ import org.springframework.data.mongodb.repository.MongoRepository
 interface PostCommentRepository: MongoRepository<PostComment, ObjectId> {
     fun findByPostId(postId: ObjectId): List<PostComment>
     fun countByPostId(postId: ObjectId): Long
-    fun findByPostIdAndUserId(postId: ObjectId, userId: ObjectId): PostComment? //for deleting comment
+    fun findByIdAndUserId(postId: ObjectId, userId: ObjectId): PostComment? //for deleting comment
 }

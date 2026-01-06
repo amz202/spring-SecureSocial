@@ -7,7 +7,6 @@ import com.example.securesocial.data.model.request.PostRequest
 import com.example.securesocial.data.model.response.PostResponse
 import com.example.securesocial.data.repositories.PostRepository
 import com.example.securesocial.data.repositories.UserRepository
-import com.example.securesocial.security.JwtService
 import org.bson.types.ObjectId
 import org.springframework.stereotype.Service
 
@@ -16,7 +15,6 @@ class PostService(
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
     private val postInteractionService: PostInteractionService,
-    private val jwtService: JwtService,
     private val activityLogService: ActivityLogService
 ) {
     fun createPost(request: PostRequest, userId: String): PostResponse{
@@ -40,7 +38,8 @@ class PostService(
             tag = savedPost.tag.toString(),
             createdAt = savedPost.createdAt,
             likeCount = 0,
-            viewCount = 0
+            viewCount = 0,
+            commentCount = 0
         )
 
         return response
@@ -57,7 +56,8 @@ class PostService(
                 authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 tag = post.tag.toString(),
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
-                viewCount = postInteractionService.getViewCount(post.id.toHexString())
+                viewCount = postInteractionService.getViewCount(post.id.toHexString()),
+                commentCount = postInteractionService.getCommentCount(post.id.toHexString())
             )
         }
         return response
@@ -78,7 +78,8 @@ class PostService(
             authorName = authorName,
             tag = post.tag.toString(),
             likeCount = postInteractionService.getLikeCount(postId),
-            viewCount = postInteractionService.getViewCount(postId)
+            viewCount = postInteractionService.getViewCount(postId),
+            commentCount = postInteractionService.getCommentCount(postId)
         )
         return response
     }
@@ -96,7 +97,8 @@ class PostService(
                 createdAt = post.createdAt,
                 authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
-                viewCount = postInteractionService.getViewCount(post.id.toHexString())
+                viewCount = postInteractionService.getViewCount(post.id.toHexString()),
+                commentCount = postInteractionService.getCommentCount(post.id.toHexString())
             )
         }
         return response
@@ -114,7 +116,8 @@ class PostService(
                 createdAt = post.createdAt,
                 authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
-                viewCount = postInteractionService.getViewCount(post.id.toHexString())
+                viewCount = postInteractionService.getViewCount(post.id.toHexString()),
+                commentCount = postInteractionService.getCommentCount(post.id.toHexString())
             )
         }
         return response

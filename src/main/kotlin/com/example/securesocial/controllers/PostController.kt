@@ -1,6 +1,8 @@
 package com.example.securesocial.controllers
 
+import com.example.securesocial.data.model.request.PostCommentRequest
 import com.example.securesocial.data.model.request.PostRequest
+import com.example.securesocial.data.model.response.PostCommentResponse
 import com.example.securesocial.data.model.response.PostLikesResponse
 import com.example.securesocial.data.model.response.PostResponse
 import com.example.securesocial.security.JwtService
@@ -59,6 +61,42 @@ class PostController(
         val userId = jwtService.getUserIdFromToken(token)
         val like = postInteractionService.likePost(userId, postId)
         return ResponseEntity.ok(like)
+    }
+
+    @DeleteMapping("/{postId}/unlike")
+    fun unlikePost(
+        @RequestHeader("Authorization") token: String,
+        @PathVariable postId: String
+    ): ResponseEntity<Any> {
+        val userId = jwtService.getUserIdFromToken(token)
+        return ResponseEntity.ok(postInteractionService.unlikePost(userId, postId))
+    }
+
+    @GetMapping("/{postId}/comments")
+    fun getPostComments(
+        @PathVariable postId: String
+    ): ResponseEntity<List<PostCommentResponse>>{
+        return ResponseEntity.ok(postInteractionService.getPostComments(postId))
+    }
+
+    @PostMapping("/{postId}/comment")
+    fun createComment(
+        @RequestHeader("Authorization") token: String,
+        @PathVariable postId: String,
+        @RequestBody request: PostCommentRequest
+    ): ResponseEntity<PostCommentResponse>{
+        val userId = jwtService.getUserIdFromToken(token)
+        return ResponseEntity.ok(postInteractionService.commentPost(request,userId,postId))
+    }
+
+    @DeleteMapping("/{postId}/comment/{commentId}")
+    fun deleteComment(
+        @RequestHeader("Authorization") token: String,
+        @PathVariable postId: String,
+        @PathVariable commentId: String
+    ): ResponseEntity<Boolean>{
+        val userId = jwtService.getUserIdFromToken(token)
+        return ResponseEntity.ok(postInteractionService.deleteComment(commentId,userId))
     }
 
     @GetMapping("/myPosts")

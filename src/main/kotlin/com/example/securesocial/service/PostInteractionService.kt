@@ -2,9 +2,13 @@ package com.example.securesocial.service
 
 import com.example.securesocial.data.model.LogType
 import com.example.securesocial.data.model.Post
+import com.example.securesocial.data.model.PostComment
 import com.example.securesocial.data.model.PostLike
 import com.example.securesocial.data.model.PostView
+import com.example.securesocial.data.model.request.PostCommentRequest
+import com.example.securesocial.data.model.response.PostCommentResponse
 import com.example.securesocial.data.model.response.PostLikesResponse
+import com.example.securesocial.data.repositories.PostCommentRepository
 import com.example.securesocial.data.repositories.PostLikeRepository
 import com.example.securesocial.data.repositories.PostViewRepository
 import com.example.securesocial.data.repositories.UserRepository
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Service
 class PostInteractionService(
     private val postLikeRepository: PostLikeRepository,
     private val postViewRepository: PostViewRepository,
+    private val postCommenRepository: PostCommentRepository,
     private val cryptoService: CryptoService,
     private val activityLogService: ActivityLogService,
     private val userRepository: UserRepository
@@ -42,6 +47,17 @@ class PostInteractionService(
         return savedLike
     }
 
+    fun unlikePost(userId: String, postId: String): Boolean {
+        val userObjectId = ObjectId(userId)
+        val postObjectId = ObjectId(postId)
+
+        val postLike = postLikeRepository.findByIdAndUserId(postObjectId, userObjectId)
+            ?: throw IllegalArgumentException("User has not liked this post")
+
+        postLikeRepository.delete(postLike)
+        return true
+    }
+
     fun viewPost(userId: String, postId: String) {
         val postObjectId = ObjectId(postId)
         val hashedToken = cryptoService.generateAnonymousViewToken(userId, postId)
@@ -63,6 +79,10 @@ class PostInteractionService(
         return postViewRepository.countByPostId(ObjectId(postId))
     }
 
+    fun getCommentCount(postId: String): Long {
+        return postCommenRepository.countByPostId(ObjectId(postId))
+    }
+
     fun getPostLikes(postId: String): List<PostLikesResponse> {
         return postLikeRepository.findByPostId(ObjectId(postId)).map { like ->
             PostLikesResponse(
@@ -71,6 +91,53 @@ class PostInteractionService(
                 postId = like.postId.toHexString()
             )
         }
+    }
+
+    fun commentPost(request: PostCommentRequest, userId: String, postId: String): PostCommentResponse{
+        val userObjectId = ObjectId(userId)
+        val postObjectId = ObjectId(postId)
+
+        val comment = PostComment(
+            postId = postObjectId,
+            userId = userObjectId,
+            comment = request.comment,
+            createdAt = System.currentTimeMillis()
+        )
+
+        val savedComment = postCommenRepository.save(comment)
+        activityLogService.log(userId, LogType.COMMENT, postId)
+
+        val response = PostCommentResponse(
+            id = savedComment.id.toHexString(),
+            comment = savedComment.comment,
+            createdAt = savedComment.createdAt,
+            username = userRepository.findById(userObjectId).orElse(null)?.username ?: "Unknown",
+            postId = savedComment.postId.toHexString()
+        )
+        return response
+    }
+
+    fun getPostComments(postId: String): List<PostCommentResponse>{
+        return postCommenRepository.findByPostId(ObjectId(postId)).map { comment ->
+            PostCommentResponse(
+                id = comment.id.toHexString(),
+                comment = comment.comment,
+                createdAt = comment.createdAt,
+                username = userRepository.findById(comment.userId).orElse(null)?.username ?: "Unknown",
+                postId = comment.postId.toHexString()
+            )
+        }
+    }
+
+    fun deleteComment(commentId: String, userId: String): Boolean{
+        val userObjectId = ObjectId(userId)
+        val commentObjectId = ObjectId(commentId)
+
+        val comment = postCommenRepository.findByIdAndUserId(commentObjectId, userObjectId)
+            ?: throw IllegalArgumentException("Comment does not exist or does not belong to the user")
+
+        postCommenRepository.delete(comment)
+        return true
     }
 
     fun verifyLikeIntegrity(likeId: String): Boolean {

@@ -8,5 +8,6 @@ data class PostResponse(
     val createdAt: Long,
     val authorName: String,
     val likeCount: Long,
-    val viewCount: Long
+    val viewCount: Long,
+    val commentCount: Long
 )
