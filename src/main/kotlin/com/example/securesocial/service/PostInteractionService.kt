@@ -51,7 +51,7 @@ class PostInteractionService(
         val userObjectId = ObjectId(userId)
         val postObjectId = ObjectId(postId)
 
-        val postLike = postLikeRepository.findByIdAndUserId(postObjectId, userObjectId)
+        val postLike = postLikeRepository.findByPostIdAndUserId(postObjectId, userObjectId)
             ?: throw IllegalArgumentException("User has not liked this post")
 
         postLikeRepository.delete(postLike)
