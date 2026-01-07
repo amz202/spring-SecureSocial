@@ -1,14 +1,12 @@
 package com.example.securesocial.data.model.response
 
-data class PostResponse(
+data class PostListResponse(
     val id: String,
     val title: String,
     val content: String,
     val tag: String,
     val createdAt: Long,
-    val authorName: String,
     val likeCount: Long,
     val viewCount: Long,
     val commentCount: Long,
-    val isLiked: Boolean
 )

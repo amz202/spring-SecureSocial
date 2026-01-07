@@ -4,7 +4,9 @@ import com.example.securesocial.data.model.LogType
 import com.example.securesocial.data.model.Post
 import com.example.securesocial.data.model.PostTag
 import com.example.securesocial.data.model.request.PostRequest
+import com.example.securesocial.data.model.response.PostListResponse
 import com.example.securesocial.data.model.response.PostResponse
+import com.example.securesocial.data.repositories.PostLikeRepository
 import com.example.securesocial.data.repositories.PostRepository
 import com.example.securesocial.data.repositories.UserRepository
 import org.bson.types.ObjectId
@@ -14,10 +16,11 @@ import org.springframework.stereotype.Service
 class PostService(
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
+    private val postLikeRepository: PostLikeRepository,
     private val postInteractionService: PostInteractionService,
     private val activityLogService: ActivityLogService
 ) {
-    fun createPost(request: PostRequest, userId: String): PostResponse{
+    fun createPost(request: PostRequest, userId: String): PostListResponse{
         val selectedTag = PostTag.valueOf(request.tag.uppercase())
         val post = Post(
             authorId = ObjectId(userId),
@@ -30,9 +33,8 @@ class PostService(
 
         val authorName = userRepository.findById(ObjectId(userId)).orElse(null)?.username ?: "Unknown"
 
-        val response = PostResponse(
+        val response = PostListResponse(
             id = savedPost.id.toHexString(),
-            authorName = authorName,
             title = savedPost.title,
             content = savedPost.content,
             tag = savedPost.tag.toString(),
@@ -45,15 +47,14 @@ class PostService(
         return response
     }
 
-    fun getAllPosts(): List<PostResponse>{
+    fun getAllPosts(): List<PostListResponse>{
         val posts = postRepository.findAll()
         val response = posts.map { post ->
-            PostResponse(
+            PostListResponse(
                 id = post.id.toHexString(),
                 title = post.title,
                 content = post.content,
                 createdAt = post.createdAt,
-                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 tag = post.tag.toString(),
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
                 viewCount = postInteractionService.getViewCount(post.id.toHexString()),
@@ -79,23 +80,23 @@ class PostService(
             tag = post.tag.toString(),
             likeCount = postInteractionService.getLikeCount(postId),
             viewCount = postInteractionService.getViewCount(postId),
-            commentCount = postInteractionService.getCommentCount(postId)
+            commentCount = postInteractionService.getCommentCount(postId),
+            isLiked = postLikeRepository.existsByPostIdAndUserId(ObjectId(postId), ObjectId(userId))
         )
         return response
     }
 
-    fun getPostsByTag(tagName: String): List<PostResponse>?{
+    fun getPostsByTag(tagName: String): List<PostListResponse>?{
         val tag = PostTag.valueOf(tagName.uppercase())
         val posts = postRepository.findByTag(tag)
 
         val response = posts?.map { post ->
-            PostResponse(
+            PostListResponse(
                 id = post.id.toHexString(),
                 title = post.title,
                 content = post.content,
                 tag = post.tag.name,
                 createdAt = post.createdAt,
-                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
                 viewCount = postInteractionService.getViewCount(post.id.toHexString()),
                 commentCount = postInteractionService.getCommentCount(post.id.toHexString())
@@ -104,17 +105,16 @@ class PostService(
         return response
     }
 
-    fun getMyPosts(userId: String):List<PostResponse>?{
+    fun getMyPosts(userId: String):List<PostListResponse>?{
         val posts = postRepository.findByAuthorId(ObjectId(userId))
 
         val response = posts?.map { post ->
-            PostResponse(
+            PostListResponse(
                 id = post.id.toHexString(),
                 title = post.title,
                 content = post.content,
                 tag = post.tag.name,
                 createdAt = post.createdAt,
-                authorName = userRepository.findById(post.authorId).orElse(null)?.username ?: "Unknown",
                 likeCount = postInteractionService.getLikeCount(post.id.toHexString()),
                 viewCount = postInteractionService.getViewCount(post.id.toHexString()),
                 commentCount = postInteractionService.getCommentCount(post.id.toHexString())
