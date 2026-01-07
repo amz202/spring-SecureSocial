@@ -20,7 +20,7 @@ class PostService(
     private val postInteractionService: PostInteractionService,
     private val activityLogService: ActivityLogService
 ) {
-    fun createPost(request: PostRequest, userId: String): PostListResponse{
+    fun createPost(request: PostRequest, userId: String): PostResponse{
         val selectedTag = PostTag.valueOf(request.tag.uppercase())
         val post = Post(
             authorId = ObjectId(userId),
@@ -33,7 +33,7 @@ class PostService(
 
         val authorName = userRepository.findById(ObjectId(userId)).orElse(null)?.username ?: "Unknown"
 
-        val response = PostListResponse(
+        val response = PostResponse(
             id = savedPost.id.toHexString(),
             title = savedPost.title,
             content = savedPost.content,
@@ -41,7 +41,9 @@ class PostService(
             createdAt = savedPost.createdAt,
             likeCount = 0,
             viewCount = 0,
-            commentCount = 0
+            commentCount = 0,
+            isLiked = false,
+            authorName = authorName
         )
 
         return response

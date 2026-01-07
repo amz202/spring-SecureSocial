@@ -4,6 +4,7 @@ import com.example.securesocial.data.model.request.PostCommentRequest
 import com.example.securesocial.data.model.request.PostRequest
 import com.example.securesocial.data.model.response.PostCommentResponse
 import com.example.securesocial.data.model.response.PostLikesResponse
+import com.example.securesocial.data.model.response.PostListResponse
 import com.example.securesocial.data.model.response.PostResponse
 import com.example.securesocial.security.JwtService
 import com.example.securesocial.service.PostInteractionService
@@ -31,7 +32,7 @@ class PostController(
 
     // Get All Posts (with counts)
     @GetMapping
-    fun getAllPosts(): ResponseEntity<List<PostResponse>> {
+    fun getAllPosts(): ResponseEntity<List<PostListResponse>> {
         return ResponseEntity.ok(postService.getAllPosts())
     }
 
@@ -49,7 +50,7 @@ class PostController(
     @GetMapping("/tag/{tagName}")
     fun getPostsByTag(
         @PathVariable tagName: String
-    ): ResponseEntity<List<PostResponse>> {
+    ): ResponseEntity<List<PostListResponse>> {
         return ResponseEntity.ok(postService.getPostsByTag(tagName))
     }
 
@@ -102,7 +103,7 @@ class PostController(
     @GetMapping("/myPosts")
     fun getMyPosts(
         @RequestHeader("Authorization") token: String
-    ): ResponseEntity<List<PostResponse>> {
+    ): ResponseEntity<List<PostListResponse>> {
         val userId = jwtService.getUserIdFromToken(token)
         return ResponseEntity.ok(postService.getMyPosts(userId))
     }
